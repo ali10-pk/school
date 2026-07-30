@@ -79,7 +79,7 @@ export const GetFee = async (req, res) => {
           admissionNo: 1,
           className: 1,
           section: 1,
-          feeDetails: {
+          fees: {
             $ifNull: [
               { $arrayElemAt: ["$monthRecord", 0] },
               {
