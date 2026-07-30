@@ -20,6 +20,6 @@ router.get("/search/:admissionNo", GetStudentByAdmissionNo);
 router.delete("/delete/:id", DeleteStudent);
 router.post("/fee", CollectFee);
 router.get("/fee/all", GetFee);
-router.get("/dashboard", AdminDashboard);
+router.get("/dashboard/all", AdminDashboard);
 
 export default router;
