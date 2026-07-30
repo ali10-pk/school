@@ -79,7 +79,8 @@ export const GetFee = async (req, res) => {
           admissionNo: 1,
           className: 1,
           section: 1,
-          fees: {
+          fees: [
+            {
             $ifNull: [
               { $arrayElemAt: ["$monthRecord", 0] },
               {
@@ -91,6 +92,7 @@ export const GetFee = async (req, res) => {
               }
             ]
           }
+          ]
         }
       },
       { $sort: { name: 1 } } // Maintain perfectly alphabetical student rows
