@@ -61,35 +61,41 @@ export const AdminDashboard = async (req, res) => {
     });
 
     // =========================
-    // Fee Statistics
+    // Current Month Fee Statistics
     // =========================
-    const students = await Student.find(
-      {},
-      {
-        fees: 1,
-      }
-    );
+    const currentMonth = new Date().toLocaleString("default", {
+      month: "long",
+      year: "numeric",
+    });
+
+    const students = await Student.find({}, { fees: 1 });
 
     let totalFee = 0;
     let paidFee = 0;
     let remainingFee = 0;
 
+    let paidStudents = 0;
     let unpaidStudents = 0;
     let partialStudents = 0;
 
     students.forEach((student) => {
+      let hasPaid = false;
       let hasUnpaid = false;
       let hasPartial = false;
 
       student.fees.forEach((fee) => {
-        totalFee += fee.amount;
-        paidFee += fee.paidAmount;
-        remainingFee += fee.remainingAmount;
+        if (fee.month === currentMonth) {
+          totalFee += fee.amount;
+          paidFee += fee.paidAmount;
+          remainingFee += fee.remainingAmount;
 
-        if (fee.status === "Unpaid") hasUnpaid = true;
-        if (fee.status === "Partial") hasPartial = true;
+          if (fee.status === "Paid") hasPaid = true;
+          if (fee.status === "Unpaid") hasUnpaid = true;
+          if (fee.status === "Partial") hasPartial = true;
+        }
       });
 
+      if (hasPaid) paidStudents++;
       if (hasUnpaid) unpaidStudents++;
       if (hasPartial) partialStudents++;
     });
@@ -104,6 +110,16 @@ export const AdminDashboard = async (req, res) => {
           totalStudents: {
             $sum: 1,
           },
+          boys: {
+            $sum: {
+              $cond: [{ $eq: ["$gender", "Male"] }, 1, 0],
+            },
+          },
+          girls: {
+            $sum: {
+              $cond: [{ $eq: ["$gender", "Female"] }, 1, 0],
+            },
+          },
         },
       },
       {
@@ -114,10 +130,11 @@ export const AdminDashboard = async (req, res) => {
     ]);
 
     // =========================
-    // Response
+    // Dashboard Response
     // =========================
     res.status(200).json({
       success: true,
+      message: "Dashboard fetched successfully.",
 
       students: {
         totalStudents,
@@ -134,9 +151,11 @@ export const AdminDashboard = async (req, res) => {
       },
 
       fees: {
+        month: currentMonth,
         totalFee,
         paidFee,
         remainingFee,
+        paidStudents,
         unpaidStudents,
         partialStudents,
       },
@@ -144,11 +163,12 @@ export const AdminDashboard = async (req, res) => {
       classWise,
     });
   } catch (error) {
-    console.log(error);
+    console.error(error);
 
     res.status(500).json({
       success: false,
-      message: error.message,
+      message: "Failed to fetch dashboard.",
+      error: error.message,
     });
   }
 };
